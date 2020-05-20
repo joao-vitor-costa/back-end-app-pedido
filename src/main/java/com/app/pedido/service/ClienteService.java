@@ -3,6 +3,7 @@ package com.app.pedido.service;
 import java.awt.image.BufferedImage;
 import java.net.URI;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -93,6 +94,18 @@ public class ClienteService {
 
 	public List<Cliente> findAll() {
 		return clienteDAO.findAll();
+	}
+
+	public Cliente findByEmail(String email) {
+		UserSS user = UserService.authenticated();
+		if (Objects.isNull(user) || !user.hasRole(Perfil.ADMIN) && !email.equals(user.getUsername())) {
+			throw new AuthorizationException("Acesso negado");
+		}
+
+		Optional<Cliente> obj = clienteDAO.findById(user.getId());
+
+		return obj.orElseThrow(() -> new ObjectNotFoundException(
+				"Objeto não encontrado! " + "Id:" + user.getId() + " " + "Tipo:" + Cliente.class.getName()));
 	}
 
 	public Page<Cliente> findPage(Integer page, Integer linesPerPage, String orderBy, String direction) {
